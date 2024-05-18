@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  submitconsumermicro:
+    image: submitconsumermicro
+    build: 
+      context: .
+    container_name: submitconsumermicro
+    restart: unless-stopped
+    ports:
+      - "3100:4100"

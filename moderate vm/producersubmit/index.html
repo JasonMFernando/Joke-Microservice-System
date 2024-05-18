@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderate Joke</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="loginSection" class="container">
+        <h2 id="loginHeading">Login</h2>
+        <div class="input-box">
+            <input type="text" id="username" name="username" placeholder="Enter username">
+        </div>
+        <div class="input-box">
+            <input type="password" id="password" name="password" placeholder="Enter password">
+        </div>
+        <div class="button-container">
+            <button class="button green" id="loginBtn">Login</button>
+        </div>
+    </div>
+
+    <div id="contentSection" class="container" style="display: none;">
+        <h2 id="jokeHeading" style="color: red;">Waiting for new joke</h2>
+        <div>
+            <label for="jokeType">Choose a joke type:</label>
+            <select id="jokeType" name="jokeType">
+                <!-- Options will be populated dynamically -->
+            </select>
+            <button id="addNewType">Add New Type</button>
+        </div>
+        <div class="input-box">
+            <input type="text" id="newJokeType" name="newJokeType" placeholder="Enter new joke type" style="display: none;">
+        </div>
+        <div class="input-box">
+            <input type="text" id="jokeSetup" name="jokeSetup" placeholder="Moderate the joke setup text">
+        </div>
+        <div class="input-box">
+            <input type="text" id="jokePunchline" name="jokePunchline" placeholder="Moderate the joke punchline">
+        </div>
+        <div class="button-container">
+            <button class="button green" id="submitJoke">Submit Joke</button>
+            <button class="button red" id="deleteJoke">Delete Joke</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const loginSection = document.getElementById('loginSection');
+            const contentSection = document.getElementById('contentSection');
+
+            document.getElementById('loginBtn').addEventListener('click', function() {
+
+                event.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                // Check if username and password are correct
+                if (username === 'admin' && password === 'admin') {
+                    loginSection.style.display = 'none';
+                    contentSection.style.display = 'block';
+                } else {
+                    alert('Invalid username or password');
+                }
+            });
+
+    // Fetch joke types and populate the dropdown
+    fetch('/mod/types')
+        .then(response => response.json())
+        .then(data => {
+            const jokeTypeDropdown = document.getElementById('jokeType');
+            data.forEach(jokeType => {
+                const option = document.createElement('option');
+                option.value = jokeType.id;
+                option.textContent = jokeType.name;
+                jokeTypeDropdown.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error fetching joke types:', error));
+
+    // Event listener for the "Add New Type" button
+    document.getElementById('addNewType').addEventListener('click', function() {
+        const newJokeTypeInput = document.getElementById('newJokeType');
+        newJokeTypeInput.style.display = 'inline-block';
+        document.getElementById('jokeType').disabled = true;
+    });
+
+    // Fetch and display the current joke
+    fetch('/mod/current-joke')
+        .then(response => response.json())
+        .then(joke => {
+            if (joke.setup && joke.punchline && joke.jokeType) {
+                document.getElementById('jokeSetup').value = joke.setup;
+                document.getElementById('jokePunchline').value = joke.punchline;
+                //document.getElementById('jokeType').value = 2;
+
+                console.log(joke.jokeType);
+                const jokeTypeDropdown = document.getElementById('jokeType');
+                //jokeTypeDropdown.querySelector(`option[value="${joke.jokeType}"]`);
+                console.log("jokeTypeDropdown.options.length" , jokeTypeDropdown.options.length);
+                const selectedJokeType = joke.jokeType;
+                for (let i = 0; i < jokeTypeDropdown.options.length; i++) {
+                    console.log(jokeTypeDropdown.options[i].value + " , " + selectedJokeType);
+                    if (jokeTypeDropdown.options[i].value === selectedJokeType) {
+                        jokeTypeDropdown.selectedIndex = i;
+                        break;
+                    }
+                }
+            } else {
+                // If there's no joke available, set default values or placeholders
+                document.getElementById('jokeSetup').placeholder = 'No joke available';
+                document.getElementById('jokePunchline').placeholder = 'No joke available';
+                document.getElementById('jokeType').disabled = true;
+                document.getElementById('submitJoke').disabled = true;
+                document.getElementById('deleteJoke').disabled = true;
+            }
+        })
+        .catch(error => console.error('Error fetching current joke:', error));
+
+    // Event listener for the "Submit Joke" button
+    document.getElementById('submitJoke').addEventListener('click', function() {
+        const jokeTypeDropdown = document.getElementById('jokeType');
+        const newJokeTypeInput = document.getElementById('newJokeType');
+        const jokeType = jokeTypeDropdown.disabled ? 0 : jokeTypeDropdown.value;
+        const jokeTypeName = jokeTypeDropdown.disabled ? newJokeTypeInput.value : jokeTypeDropdown.options[jokeTypeDropdown.selectedIndex].text; // Get the selected joke type name
+        const jokeSetup = document.getElementById('jokeSetup').value;
+        const jokePunchline = document.getElementById('jokePunchline').value;
+        fetch('/mod/submit-joke', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ jokeType, jokeTypeName: jokeTypeName, setup: jokeSetup, punchline: jokePunchline })
+        })
+        .then(response => {
+            if (response.ok) {
+                // Refresh the page to get the next joke
+                window.location.reload();
+            } else {
+                console.error('Failed to submit joke:', response.statusText);
+            }
+        })
+        .catch(error => console.error('Error submitting joke:', error));
+    });
+
+    // Event listener for the "Delete Joke" button
+    document.getElementById('deleteJoke').addEventListener('click', function() {
+        fetch('/mod/delete-joke', { method: 'POST' })
+        .then(response => {
+            if (response.ok) {
+                // Refresh the page to get the next joke
+                window.location.reload();
+            } else {
+                console.error('Failed to delete joke:', response.statusText);
+            }
+        })
+        .catch(error => console.error('Error deleting joke:', error));
+    });
+});
+
+    </script>
+</body>
+</html>
