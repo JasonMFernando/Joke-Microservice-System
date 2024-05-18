@@ -1,0 +1,21 @@
+services:
+  kong:
+    image: kong
+    container_name: kong
+    volumes:
+      - ./kong.yaml:/usr/local/kong/declarative/kong.yaml # not a volume but a bind mount - map config file to container dir
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/usr/local/kong/declarative/kong.yaml # Location of declarative file
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001, 0.0.0.0:8444
+      - KONG_LOG_LEVEL=debug  # Add this if you want more verbose logging - e.g. endpoints forwarded to
+    ports:
+      - "80:8000"      # kong default API entrypoint for http
+      - "8443:8443"    # kong default API entrypoint for https
+      - "127.0.0.1:8001:8001"  # kong default management API using http
+      - "127.0.0.1:8444:8444"  # kong default management API using https
+

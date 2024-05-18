@@ -1,0 +1,44 @@
+_format_version: "3.0"
+
+services:
+  - name: getjokemicro
+   # url: http://host.docker.internal:4000   # Target is a local container
+   # url: http://host.docker.internal:3000   # When target is not a container but, say vscode
+   # url: http://20.163.179.127:3000      #10.0.0.4 ipaddress
+    url: http://10.0.0.4:3000
+
+    routes:
+      - name: getjokemicro
+        paths:
+         - /joke/  # Path needs to be yin with something after it. e.g. yin/ is '/' path, /yin/want-yang etc
+    
+
+  - name: submitmicro
+   # url: http://host.docker.internal:4001 # Target is a local container
+   # url: http://host.docker.internal:3001  # When target is not a container
+    url: http://4.227.150.72:3200		
+    routes:
+      - name: submitmicro
+        paths:
+         - /sub/
+
+  - name: moderatemicro
+   # url: http://host.docker.internal:4001 # Target is a local container
+   # url: http://host.docker.internal:3001  # When target is not a container
+    url: http://10.0.0.6:3100		
+    routes:
+      - name: moderatemicro
+        paths:
+         - /mod/
+     
+
+plugins:
+  - name: rate-limiting
+    service: getjokemicro
+    config:
+      minute: 9      # Note if browser requests resources such as css, then they count
+
+  - name: rate-limiting
+    service: submitmicro
+    config:
+      minute: 6 
