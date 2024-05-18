@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Joke</title>
+    <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Submit Joke</h1>
+        
+        <!-- Joke submission form -->
+        <form id="jokeForm" action="/submitjoke" method="POST">
+            <div class="form-group">
+                <label for="setup">Joke Setup:</label>
+                <input type="text" id="setup" name="setup" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="punchline">Joke Punchline:</label>
+                <input type="text" id="punchline" name="punchline" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="jokeType">Joke Type:</label>
+                <select id="jokeType" name="jokeType" class="form-control" required>
+                    <!-- Joke types options will be populated dynamically using JavaScript -->
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Fetch joke types and populate the dropdown
+            fetch('/sub/joketypes')
+                .then(response => response.json())
+                .then(data => {
+                    const jokeTypeDropdown = document.getElementById('jokeType');
+                    data.forEach(jokeType => {
+                        const option = document.createElement('option');
+                        option.value = jokeType.id;
+                        option.textContent = jokeType.name;
+                        jokeTypeDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+
+            // JavaScript code for form submission can go here
+            document.getElementById('jokeForm').addEventListener('submit', function(event) {
+                // Prevent the default form submission behavior
+                event.preventDefault();
+
+                // Get the values of the input fields and dropdown
+                const setup = document.getElementById('setup').value;
+                const punchline = document.getElementById('punchline').value;
+                const jokeType = document.getElementById('jokeType').value;
+
+                // Call a function to handle the form submission
+                submitJoke(setup, punchline, jokeType);
+            });
+
+            // Function to submit joke from the frontend
+            function submitJoke(setup, punchline, jokeType) {
+                console.log(setup);
+                console.log(punchline);
+                console.log(jokeType);
+                const payload = { setup: setup, punchline: punchline, jokeType: jokeType};
+                console.log("JSON.stringify(payload)" , JSON.stringify(payload));
+                // Make a fetch request to submit the joke data to the server
+                fetch('/sub/submit-joke', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload), // Include jokeType in the request body
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // If the response is successful, log a success message
+                        console.log('Joke submitted successfully');
+                    } else {
+                        // If the response is not successful, log an error message
+                        console.error('Failed to submit joke:', response.statusText);
+                    }
+                })
+                .catch(error => {
+                    // Log any errors that occur during the fetch request
+                    console.error('Error submitting joke:', error);
+                });
+            }
+
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  submitjokemicro:
+    image: submitjokemicro
+    build: 
+      context: .
+    container_name: submitjokemicro
+    restart: unless-stopped
+    ports:
+      - "3200:4200"
