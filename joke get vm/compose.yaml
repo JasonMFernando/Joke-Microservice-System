@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  jokemicro:
+    image: getjoke
+    build: 
+      context: ./Getjokemico
+    container_name: jokemicro
+    restart: unless-stopped
+    ports:
+      - "3000:4000"
+
+  conetl:
+    build: 
+      context: ./consumeretl
+    container_name: conetl
+    restart: unless-stopped
+    ports:
+      - "3001:4001"
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql-db2
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 4002:3306
+
+volumes:
+  mysql_data:
+    driver: local
